@@ -76,7 +76,7 @@ class Joueur:
         self.a_parle = True
         print(f"{self.nom} se couche.")
 
-    def all_in(self):
+    def miser_all_in(self):
         """Fait aller le joueur à tapis (miser tous ses jetons restants)."""
         montant_all_in = self.jetons
         if montant_all_in > 0:
@@ -103,3 +103,6 @@ class Joueur:
     def __repr__(self):
         """Représentation de l'objet pour le débogage."""
         return f"Joueur(nom='{self.nom}', jetons={self.jetons})"
+
+    def __eq__(self, other):
+        return isinstance(other, Joueur) and other.nom == self.nom

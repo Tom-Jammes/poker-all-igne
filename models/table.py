@@ -1,6 +1,6 @@
 import random
-from cartes import Paquet
-from joueur import Joueur
+from models.cartes import Paquet
+from models.joueur import Joueur
 
 class Table:
     """Représente une table de poker."""
@@ -16,6 +16,7 @@ class Table:
         """
         self.code = code
         self.createur = Joueur(nom_createur, montant_joueurs)
+        self.nb_joueurs = nb_joueurs
         self.joueurs = [self.createur]  # Liste des objets Joueur assis à la table
         self.paquet = None
         self.pot = 0
@@ -30,6 +31,7 @@ class Table:
         self.phase_jeu = "avant_premiere_donne"  # État actuel du jeu (avant_premiere_donne, premiere_donne, flop, turn, river, fin_de_tour)
         self.cartes_communes = []  # Les cartes au centre de la table
         self.historique_actions = [] # Liste des actions effectuées pendant le tour
+        self.nb_tours = 0
         print(f"Table '{self.code}' créée par {self.createur}.")
 
     def ajouter_joueur(self, nom_joueur):
@@ -68,9 +70,13 @@ class Table:
 
     def demarrer_tour(self):
         """Démarre un nouveau tour de poker."""
-        if len(self.joueurs) < 2:
+        if len(self.joueurs) < self.nb_joueurs:
             print("Pas assez de joueurs pour démarrer un tour.")
             return False
+
+        if self.nb_tours != 0 and self.nb_tours % 5 == 0 : # On augmente la blind au fur et à mesure
+            self.petite_blind_mise += 10
+            self.grosse_blind_mise += 20
 
         print(f"\n--- Début du tour ---")
         self.paquet = Paquet()
@@ -119,8 +125,8 @@ class Table:
                 self.mise_courante = max(self.mise_courante, self.petite_blind_mise)
                 self.historique_actions.append(f"{petite_blind_joueur.nom} paie la petite blind ({self.petite_blind_mise})")
             else:
-                print(f"Erreur : {petite_blind_joueur.nom} n'a pas pu payer la petite blind.")
-                # TODO Gérer le cas où le joueur n'a pas assez de jetons
+                petite_blind_joueur.miser_all_in()
+                print(f"Erreur : {petite_blind_joueur.nom} a du all-in pour payer la petite blind.")
 
             print(f"{grosse_blind_joueur.nom} paie la grosse blind de {self.grosse_blind_mise}.")
             if grosse_blind_joueur.miser(self.grosse_blind_mise):
@@ -129,8 +135,8 @@ class Table:
                 self.dernier_a_relancer = grosse_blind_joueur
                 self.historique_actions.append(f"{grosse_blind_joueur.nom} paie la grosse blind ({self.grosse_blind_mise})")
             else:
-                print(f"Erreur : {grosse_blind_joueur.nom} n'a pas pu payer la grosse blind.")
-                # Gérer le cas où le joueur n'a pas assez de jetons
+                grosse_blind_joueur.miser_all_in()
+                print(f"Erreur : {grosse_blind_joueur.nom} a du all-in pour payer la grosse blind.")
 
     def _distribuer_cartes_communes(self, nombre):
         """Distribue un certain nombre de cartes communes."""
@@ -189,13 +195,13 @@ class Table:
         for joueur in self.joueurs:
             print(f"{joueur.nom} (mise: {joueur.mise_courante}, jetons: {joueur.jetons}, {'couché' if joueur.est_couche else 'en jeu'})")
 
-    def avancer_dealer(self):
+    def _avancer_dealer(self):
         """Passe le rôle du croupier au joueur suivant."""
         self.dealer_index = (self.dealer_index + 1) % len(self.joueurs)
         self._mettre_a_jour_indices_blinds()
         print(f"\nLe croupier est maintenant {self.joueurs[self.dealer_index].nom}.")
 
-    def determiner_gagnant(self):
+    def _determiner_gagnant(self):
         """Fonction temporaire pour déterminer un gagnant (à remplacer par la logique d'évaluation des mains)."""
         joueurs_en_jeu = [joueur for joueur in self.joueurs if not joueur.est_couche and not joueur.all_in]
         if not joueurs_en_jeu:
@@ -219,9 +225,10 @@ class Table:
     def terminer_tour(self):
         """Termine le tour actuel."""
         print("\n--- Fin du tour ---")
-        self.determiner_gagnant()
-        self.avancer_dealer()
+        self._determiner_gagnant()
+        self._avancer_dealer()
         self.phase_jeu = "fin_de_tour"
+        self.nb_tours += 1
 
     def __str__(self):
         return f"Table de poker '{self.code}' créée par {self.createur} ({len(self.joueurs)} joueurs)"
