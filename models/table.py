@@ -202,7 +202,7 @@ class Table:
         print(f"\nLe croupier est maintenant {self.joueurs[self.dealer_index].nom}.")
 
     def _determiner_gagnant(self):
-        """Fonction temporaire pour déterminer un gagnant (à remplacer par la logique d'évaluation des mains)."""
+        """Determine quel joueur gagne le tour"""
         joueurs_en_jeu = [joueur for joueur in self.joueurs if not joueur.est_couche and not joueur.all_in]
         if not joueurs_en_jeu:
             joueurs_en_jeu = [joueur for joueur in self.joueurs if not joueur.est_couche] # Si tout le monde à tapis
