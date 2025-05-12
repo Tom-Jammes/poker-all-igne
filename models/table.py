@@ -9,14 +9,14 @@ class Table:
         Initialise une nouvelle table de poker.
 
         Args:
-            code (str): Un code unique pour identifier la table.
+            code: Un code unique pour identifier la table.
             nom_createur (str): le nom du joueur qui a créé la table de poker.
             nb_joueurs (int): nombre de joueurs pour la table de poker.
             montant_joueurs (int): montant de base par joueur.
         """
         self.code = code
         self.createur = Joueur(nom_createur, montant_joueurs)
-        self.nb_joueurs = nb_joueurs
+        self.nb_joueurs = nb_joueurs # TODO définir un min à 3 et un max à 10
         self.joueurs = [self.createur]  # Liste des objets Joueur assis à la table
         self.paquet = None
         self.pot = 0
@@ -235,3 +235,24 @@ class Table:
 
     def __repr__(self):
         return f"Table(code='{self.code}', createur='{self.createur}', joueurs={[j.nom for j in self.joueurs]})"
+
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
+class TableModel(db.Model):
+    __tablename__ = 'tables_poker'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre_joueurs = db.Column(db.Integer, nullable=False)
+    createur = db.Column(db.String(80), nullable=False)
+    montant_joueurs = db.Column(db.Integer, nullable=False)
+    date_creation = db.Column(db.TIMESTAMP, server_default=db.func.now())
+
+    def __init__(self, nombre_joueurs, createur, montant_joueurs):
+        self.nombre_joueurs = nombre_joueurs
+        self.montant_joueurs = montant_joueurs
+        self.createur = createur
+
+    def __repr__(self):
+        return f"<Table {self.id}, nombre_joueurs: {self.nombre_joueurs}, createur: {self.createur}, montant_joueurs: {self.montant_joueurs}, date_creation: {self.date_creation}>"
