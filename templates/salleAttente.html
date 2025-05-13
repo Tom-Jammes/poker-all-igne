@@ -1,11 +1,35 @@
 <!DOCTYPE html>
-    <html lang="fr">
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>En attente de tous les joueurs</title>
+        <title>Salle d'attente - Table {{ table_id }}</title>
     </head>
-
     <body>
-        <h1>8XVB2KY</h1>
+        <h1>Salle d'attente pour la table {{ table_id }}</h1>
+        <p id="joueurs-info"><span id="joueurs-connectes">{{ nombre_joueurs }}</span>/{{ max_joueurs }} joueurs</p>
+
+        <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+        <script>
+            const socket = io();
+
+            const tableId = {{ table_id }};
+            const nomJoueur = "{{ nom_joueur}}";
+
+            let nbJoueursConnectes = document.getElementById("joueurs-connectes");
+
+            socket.on('connect', () => {
+                console.log("Socket connectée !");
+                socket.emit('join_table', {
+                    table_id: tableId,
+                    nom_joueur: nomJoueur
+                });
+            });
+
+            socket.on('joueur_rejoint', (data) => {
+                console.log(`${data.nom_joueur} a rejoint la table.`);
+                console.log(data.nombre_joueurs)
+                nbJoueursConnectes.textContent = `${data.nombre_joueurs}`
+            });
+        </script>
     </body>
 </html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Createur rejoint table</title>
+</head>
+<body>
+    <form id="autoPostForm" action="{{ url_for('rejoindre_table') }}" method="POST">
+    <input type="hidden" name="nomJoueur" value="{{ nom_joueur }}">
+    <input type="hidden" name="codePartie" value="{{ code_partie }}">
+</form>
+
+<script>
+    document.getElementById("autoPostForm").submit();
+</script>
+</body>
+</html>

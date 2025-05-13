@@ -235,24 +235,3 @@ class Table:
 
     def __repr__(self):
         return f"Table(code='{self.code}', createur='{self.createur}', joueurs={[j.nom for j in self.joueurs]})"
-
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-
-class TableModel(db.Model):
-    __tablename__ = 'tables_poker'
-
-    id = db.Column(db.Integer, primary_key=True)
-    nombre_joueurs = db.Column(db.Integer, nullable=False)
-    createur = db.Column(db.String(80), nullable=False)
-    montant_joueurs = db.Column(db.Integer, nullable=False)
-    date_creation = db.Column(db.TIMESTAMP, server_default=db.func.now())
-
-    def __init__(self, nombre_joueurs, createur, montant_joueurs):
-        self.nombre_joueurs = nombre_joueurs
-        self.montant_joueurs = montant_joueurs
-        self.createur = createur
-
-    def __repr__(self):
-        return f"<Table {self.id}, nombre_joueurs: {self.nombre_joueurs}, createur: {self.createur}, montant_joueurs: {self.montant_joueurs}, date_creation: {self.date_creation}>"
