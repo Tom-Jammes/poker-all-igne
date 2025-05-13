@@ -5,31 +5,11 @@
         <title>Salle d'attente - Table {{ table_id }}</title>
     </head>
     <body>
-        <h1>Salle d'attente pour la table {{ table_id }}</h1>
+        <h1>Salle d'attente pour la table <span id="table-id">{{ table_id }}</span></h1>
+        <p>Connecté en tant que <span id="nom-joueur">{{ nom_joueur}}</span></p>
         <p id="joueurs-info"><span id="joueurs-connectes">{{ nombre_joueurs }}</span>/{{ max_joueurs }} joueurs</p>
 
         <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
-        <script>
-            const socket = io();
-
-            const tableId = {{ table_id }};
-            const nomJoueur = "{{ nom_joueur}}";
-
-            let nbJoueursConnectes = document.getElementById("joueurs-connectes");
-
-            socket.on('connect', () => {
-                console.log("Socket connectée !");
-                socket.emit('join_table', {
-                    table_id: tableId,
-                    nom_joueur: nomJoueur
-                });
-            });
-
-            socket.on('joueur_rejoint', (data) => {
-                console.log(`${data.nom_joueur} a rejoint la table.`);
-                console.log(data.nombre_joueurs)
-                nbJoueursConnectes.textContent = `${data.nombre_joueurs}`
-            });
-        </script>
+        <script src="/static/js/websocket.js"></script>
     </body>
 </html>

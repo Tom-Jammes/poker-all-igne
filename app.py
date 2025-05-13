@@ -114,20 +114,26 @@ def page_salle_attente(table_id):
                                max_joueurs=table.nombre_joueurs_max, nom_joueur = nom_joueur)
     return "Salle d'attente non trouvée."
 
+# Gestion du websocket
+
 @socketio.on('join_table')
 def handle_join_table(data):
     table_id = data.get('table_id')
     nom_joueur = data.get('nom_joueur')
 
     join_room(str(table_id))
+    print(f"Joueur : {nom_joueur} connecté à la table {table_id}")
     table = db.session.get(TableModel, table_id)
     if table:
+        print(f"Joueur : {nom_joueur} à notifié sa présence")
         nombre_joueurs = len(table.joueurs_en_table)
         emit('joueur_rejoint', {
             'nom_joueur': nom_joueur,
             'nombre_joueurs': nombre_joueurs,
             'max_joueurs': table.nombre_joueurs_max
         }, to=str(table_id))
+
+# Initialisation du l'app et de la bd
 
 @app.cli.command("init-db")
 def init_db():
