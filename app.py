@@ -110,9 +110,9 @@ def page_salle_attente(table_id):
     table = db.session.get(TableModel, table_id)
     if table:
         nombre_joueurs = len(table.joueurs_en_table)
-        return render_template("salleAttente.html", table_id=table_id, nombre_joueurs=nombre_joueurs,
+        return render_template("tableJeu.html", table_id=table_id, nombre_joueurs=nombre_joueurs,
                                max_joueurs=table.nombre_joueurs_max, nom_joueur = nom_joueur)
-    return "Salle d'attente non trouvée."
+    return "Table non trouvée"
 
 # Gestion du websocket
 
@@ -121,17 +121,60 @@ def handle_join_table(data):
     table_id = data.get('table_id')
     nom_joueur = data.get('nom_joueur')
 
-    join_room(str(table_id))
-    print(f"Joueur : {nom_joueur} connecté à la table {table_id}")
     table = db.session.get(TableModel, table_id)
     if table:
-        print(f"Joueur : {nom_joueur} à notifié sa présence")
+        join_room(str(table_id))
         nombre_joueurs = len(table.joueurs_en_table)
         emit('joueur_rejoint', {
             'nom_joueur': nom_joueur,
             'nombre_joueurs': nombre_joueurs,
-            'max_joueurs': table.nombre_joueurs_max
         }, to=str(table_id))
+
+        if nombre_joueurs == table.nombre_joueurs_max:
+            emit(
+                'lancement_partie', to=str(table_id)
+            )
+    # TODO retourner une erreur si il n'y a pas de table trouvé
+
+@socketio.on('joueur_se_couche')
+def handle_se_coucher(data):
+    table_id = data.get('table_id')
+    nom_joueur = data.get('nom_joueur')
+
+    # TODO faire la logique d'un joueur qui se couche
+
+    emit(
+        'joueur_est_couche', {
+            'nom_joueur': nom_joueur,
+        }, to=str(table_id)
+    )
+
+
+@socketio.on('joueur_suit')
+def handle_se_coucher(data):
+    table_id = data.get('table_id')
+    nom_joueur = data.get('nom_joueur')
+
+    # TODO faire la logique d'un joueur qui suit
+
+    emit(
+        'joueur_a_suivi', {
+            'nom_joueur': nom_joueur,
+        }, to=str(table_id)
+    )
+
+@socketio.on('joueur_sur_encheri')
+def handle_se_coucher(data):
+    table_id = data.get('table_id')
+    nom_joueur = data.get('nom_joueur')
+
+    # TODO faire la logique d'un joueur qui sur_encheri
+
+    emit(
+        'joueur_a_sur_encheri', {
+            'nom_joueur': nom_joueur,
+        }, to=str(table_id)
+    )
 
 # Initialisation du l'app et de la bd
 

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>Salle d'attente - Table {{ table_id }}</title>
+        <link rel="stylesheet" href="/static/css/pageJeu.css">
+    </head>
+    <body>
+        <div id="salle-attente" class="">
+            <h1>Salle d'attente pour la table <span id="table-id">{{ table_id }}</span></h1>
+            <p>Connecté en tant que <span id="nom-joueur">{{ nom_joueur}}</span></p>
+            <p id="joueurs-info"><span id="joueurs-connectes">{{ nombre_joueurs }}</span>/{{ max_joueurs }} joueurs</p>
+        </div>
+
+        <div id="jeu-lance" class="hidden">
+            <h1>Table {{ table_id }}</h1>
+            <button id="btn-fold">Fold</button>
+            <button id="btn-call">Call</button>
+            <button id="btn-bet">Bet</button>
+        </div>
+
+        <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+        <script src="/static/js/websocket.js"></script>
+    </body>
+</html>
