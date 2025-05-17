@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room
+from models.table import Table
+from utils.serialisation import serialiser_obj, deserialiser_obj
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
@@ -19,17 +21,17 @@ class TableModel(db.Model):
     nombre_joueurs_max = db.Column(db.Integer, nullable=False)
     joueurs_en_table = db.relationship('PlayerInTable', back_populates='table') # nombre de joueur qui ont rejoint la salle
     createur = db.Column(db.String(80), nullable=False)
-    montant_joueurs = db.Column(db.Integer, nullable=False)
+    etat_serialise = db.Column(db.Text, nullable=False)
     date_creation = db.Column(db.TIMESTAMP, server_default=db.func.now())
 
-    def __init__(self, nombre_joueurs_max, createur, montant_joueurs):
+    def __init__(self, nombre_joueurs_max, createur, etat_serialise):
         self.nombre_joueurs_max = nombre_joueurs_max
-        self.montant_joueurs = montant_joueurs
         self.createur = createur
+        self.etat_serialise = etat_serialise
 
     def __repr__(self):
         return (f"<Table {self.id}, nombre_joueurs_max: {self.nombre_joueurs_max}, createur: {self.createur}, "
-                f"montant_joueurs: {self.montant_joueurs}, date_creation: {self.date_creation}>")
+                f"joueurs_en_table: {self.joueurs_en_table}, date_creation: {self.date_creation}>")
 
 class PlayerInTable(db.Model):
     __tablename__ = 'joueurs_en_table'
@@ -63,10 +65,12 @@ def creer_nouvelle_table():
         montant_joueurs = int(request.form.get('montantJoueurs'))
         nom_createur = request.form.get('nomCreateur')
 
-        # Créez une instance du modèle TableModel
-        nouvelle_table_db = TableModel(nombre_joueurs_max=nb_joueurs, createur=nom_createur, montant_joueurs=montant_joueurs)
-
         try:
+            table = Table(nom_createur, nb_joueurs, montant_joueurs)
+            table_serialise = serialiser_obj(table)
+
+            # Créez une instance du modèle TableModel
+            nouvelle_table_db = TableModel(nombre_joueurs_max=nb_joueurs, createur=nom_createur, etat_serialise=table_serialise)
             db.session.add(nouvelle_table_db)
             db.session.commit()
             table_id = nouvelle_table_db.id
@@ -97,6 +101,9 @@ def rejoindre_table():
         if not joueur_existe:
             nouveau_joueur = PlayerInTable(nom_joueur=nom_joueur, table_id=table_id)
             db.session.add(nouveau_joueur)
+            table_deserialise = deserialiser_obj(table.etat_serialise)
+            table_deserialise.ajouter_joueur(nom_joueur)
+            table.etat_serialise = serialiser_obj(table_deserialise)
             db.session.commit()
 
             return redirect(url_for('page_salle_attente', table_id=table_id, nomJoueur=nom_joueur))
@@ -131,6 +138,8 @@ def handle_join_table(data):
         }, to=str(table_id))
 
         if nombre_joueurs == table.nombre_joueurs_max:
+            table_deserialise = deserialiser_obj(table.etat_serialise)
+            table_deserialise.demarrer_tour()
             emit(
                 'lancement_partie', to=str(table_id)
             )

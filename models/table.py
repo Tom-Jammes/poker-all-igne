@@ -4,20 +4,18 @@ from models.joueur import Joueur
 
 class Table:
     """Représente une table de poker."""
-    def __init__(self, code, nom_createur, nb_joueurs, montant_joueurs):
+    def __init__(self, nom_createur, nb_joueurs, montant_joueurs):
         """
         Initialise une nouvelle table de poker.
 
         Args:
-            code: Un code unique pour identifier la table.
             nom_createur (str): le nom du joueur qui a créé la table de poker.
             nb_joueurs (int): nombre de joueurs pour la table de poker.
             montant_joueurs (int): montant de base par joueur.
         """
-        self.code = code
-        self.createur = Joueur(nom_createur, montant_joueurs)
+        self.createur = nom_createur
         self.nb_joueurs = nb_joueurs # TODO définir un min à 3 et un max à 10
-        self.joueurs = [self.createur]  # Liste des objets Joueur assis à la table
+        self.joueurs = []  # Liste des objets Joueur assis à la table
         self.paquet = None
         self.pot = 0
         self.montant_joueurs = montant_joueurs
@@ -32,7 +30,7 @@ class Table:
         self.cartes_communes = []  # Les cartes au centre de la table
         self.historique_actions = [] # Liste des actions effectuées pendant le tour
         self.nb_tours = 0
-        print(f"Table '{self.code}' créée par {self.createur}.")
+        print(f"Table créée par {self.createur}.")
 
     def ajouter_joueur(self, nom_joueur):
         """
@@ -43,19 +41,19 @@ class Table:
         joueur = Joueur(nom_joueur, self.montant_joueurs)
         if joueur not in self.joueurs:
             self.joueurs.append(joueur)
-            print(f"{joueur.nom} a rejoint la table '{self.code}'.")
+            print(f"{joueur.nom} a rejoint la table.")
             self._mettre_a_jour_indices_blinds() # Mettre à jour les blinds si nécessaire
         else:
-            print(f"{joueur.nom} est déjà à la table '{self.code}'.")
+            print(f"{joueur.nom} est déjà à la table.")
 
     def retirer_joueur(self, joueur):
         """Retire un joueur de la table."""
         if joueur in self.joueurs:
             self.joueurs.remove(joueur)
-            print(f"{joueur.nom} a quitté la table '{self.code}'.")
+            print(f"{joueur.nom} a quitté la table.")
             self._mettre_a_jour_indices_blinds() # Mettre à jour les blinds si nécessaire
         else:
-            print(f"{joueur.nom} n'est pas à la table '{self.code}'.")
+            print(f"{joueur.nom} n'est pas à la table.")
 
     def _mettre_a_jour_indices_blinds(self):
         """Met à jour les indices du croupier et des blinds en fonction du nombre de joueurs."""
@@ -231,7 +229,8 @@ class Table:
         self.nb_tours += 1
 
     def __str__(self):
-        return f"Table de poker '{self.code}' créée par {self.createur} ({len(self.joueurs)} joueurs)"
+        return (f"Table de poker créée par {self.createur}, ({len(self.joueurs)} joueurs), {self.montant_joueurs} jetons par joueurs"
+                f"{self.joueurs} joueurs dans la table actuellement")
 
     def __repr__(self):
-        return f"Table(code='{self.code}', createur='{self.createur}', joueurs={[j.nom for j in self.joueurs]})"
+        return f"Table(createur='{self.createur}', joueurs={[j.nom for j in self.joueurs]}, montant_joueurs={self.montant_joueurs})"

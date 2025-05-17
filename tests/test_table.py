@@ -5,11 +5,9 @@ class TestTable:
     def test_creation_table(self):
         nb_joueurs = 5
         montant_joueur = 500
-        table = Table("ROND1", "Alice", nb_joueurs, montant_joueur)
-        alice = Joueur("Alice", montant_joueur)
-        assert table.code == "ROND1"
-        assert table.createur == alice
-        assert table.joueurs == [alice]
+        table = Table("Alice", nb_joueurs, montant_joueur)
+        assert table.createur == "Alice"
+        assert table.joueurs == []
         assert table.pot == 0
         assert table.dealer_index == 0
         assert table.petite_blind_index == 1
@@ -20,7 +18,7 @@ class TestTable:
     def test_ajouter_joueur(self):
         nb_joueurs = 5
         montant_joueur = 500
-        table = Table("CARRE2", "Bob", nb_joueurs, montant_joueur)
+        table = Table("Bob", nb_joueurs, montant_joueur)
         joueur1 = Joueur("Charlie")
         joueur2 = Joueur("David")
         table.ajouter_joueur("Charlie")
@@ -28,41 +26,41 @@ class TestTable:
         assert joueur1 in table.joueurs
         assert joueur2 in table.joueurs
         assert table.joueurs[1].jetons == montant_joueur
-        assert len(table.joueurs) == 3
+        assert len(table.joueurs) == 2
 
     def test_ajouter_joueur_deja_present(self):
         nb_joueurs = 5
         montant_joueur = 500
-        table = Table("TRIANGLE3", "Eve", nb_joueurs, montant_joueur)
+        table = Table("Eve", nb_joueurs, montant_joueur)
         table.ajouter_joueur("Frankie")
         table.ajouter_joueur("Frankie") # Ajouter le même joueur une deuxième fois
-        assert len(table.joueurs) == 2
+        assert len(table.joueurs) == 1
 
     def test_retirer_joueur(self):
         nb_joueurs = 5
         montant_joueur = 500
-        table = Table("LIGNE4", "Grace", nb_joueurs, montant_joueur)
+        table = Table("Grace", nb_joueurs, montant_joueur)
         table.ajouter_joueur("Heidi")
         table.ajouter_joueur("Ivan")
-        joueur1 = table.joueurs[1]
-        joueur2 = table.joueurs[2]
+        joueur1 = table.joueurs[0]
+        joueur2 = table.joueurs[1]
         table.retirer_joueur(joueur1)
         assert joueur1 not in table.joueurs
         assert joueur2 in table.joueurs
-        assert len(table.joueurs) == 2
+        assert len(table.joueurs) == 1
 
     def test_retirer_joueur_non_present(self):
         nb_joueurs = 5
         montant_joueur = 500
-        table = Table("CERCLE5", "Judy", nb_joueurs, montant_joueur)
+        table = Table("Judy", nb_joueurs, montant_joueur)
         joueur = Joueur("Kelly", montant_joueur)
         table.retirer_joueur(joueur) # Tenter de retirer un joueur non présent
-        assert len(table.joueurs) == 1 # ou l'état initial
+        assert len(table.joueurs) == 0 # ou l'état initial
 
     def test_demarrer_tour_pas_assez_de_joueurs(self):
         nb_joueurs = 5
         montant_joueur = 500
-        table = Table("ETOILE6", "Liam", nb_joueurs, montant_joueur)
+        table = Table("Liam", nb_joueurs, montant_joueur)
         assert table.demarrer_tour() is False
         table.ajouter_joueur("Mia")
         assert table.demarrer_tour() is False
@@ -74,7 +72,8 @@ class TestTable:
     def test_demarrer_tour_pas_assez_de_jetons(self):
         nb_joueurs = 3
         montant_joueur = 5
-        table = Table("NUAGE6.5", "Liam", nb_joueurs, montant_joueur)
+        table = Table("Liam", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Liam")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
         assert table.demarrer_tour() is True
@@ -84,7 +83,8 @@ class TestTable:
     def test_demarrer_tour_succes(self):
         nb_joueurs = 3
         montant_joueur = 500
-        table = Table("SOLEIL7", "Noah", nb_joueurs, montant_joueur)
+        table = Table("Noah", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Noah")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
         assert table.demarrer_tour() is True
@@ -120,7 +120,8 @@ class TestTable:
     def test_flop(self):
         nb_joueurs = 3
         montant_joueur = 500
-        table = Table("MAISON8", "Nicolas", nb_joueurs, montant_joueur)
+        table = Table("Nicolas", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Nicolas")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
 
@@ -133,7 +134,8 @@ class TestTable:
     def test_turn(self):
         nb_joueurs = 3
         montant_joueur = 500
-        table = Table("MAISON8", "Nicolas", nb_joueurs, montant_joueur)
+        table = Table("Nicolas", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Nicolas")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
 
@@ -148,7 +150,8 @@ class TestTable:
     def test_river(self):
         nb_joueurs = 3
         montant_joueur = 500
-        table = Table("MAISON8", "Nicolas", nb_joueurs, montant_joueur)
+        table = Table("Nicolas", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Nicolas")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
 
@@ -164,7 +167,8 @@ class TestTable:
     def test_terminer_tour(self):
         nb_joueurs = 3
         montant_joueur = 500
-        table = Table("PIERRE9", "Hugo", nb_joueurs, montant_joueur)
+        table = Table("Hugo", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Hugo")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
 
