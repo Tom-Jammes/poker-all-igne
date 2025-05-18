@@ -14,14 +14,15 @@ class Table:
             montant_joueurs (int): montant de base par joueur.
         """
         self.createur = nom_createur
-        self.nb_joueurs = nb_joueurs # TODO définir un min à 3 et un max à 10
+        self.nb_joueurs = nb_joueurs # nombre de joueurs pour lancer la table TODO définir un min à 3 et un max à 10
         self.joueurs = []  # Liste des objets Joueur assis à la table
         self.paquet = None
         self.pot = 0
         self.montant_joueurs = montant_joueurs
-        self.dealer_index = 0  # Index du joueur qui est le croupier actuel
-        self.petite_blind_index = 1  # Index du joueur pour la petite blind
-        self.grosse_blind_index = 2  # Index du joueur pour la grosse blind
+        self.dealer_index = random.randint(0, nb_joueurs)  # Index du joueur qui est le croupier actuel
+        self.petite_blind_index = (self.dealer_index + 1) % nb_joueurs  # Index du joueur pour la petite blind
+        self.grosse_blind_index = (self.dealer_index + 2) % nb_joueurs  # Index du joueur pour la grosse blind
+        self.index_joueur_tour = (self.dealer_index + 3) % nb_joueurs
         self.petite_blind_mise = 10
         self.grosse_blind_mise = 20
         self.mise_courante = 0  # La mise actuelle à égaler pour rester dans le tour
@@ -227,6 +228,42 @@ class Table:
         self._avancer_dealer()
         self.phase_jeu = "fin_de_tour"
         self.nb_tours += 1
+
+    def joueur_se_couche(self, nom_joueur):
+        """
+        Effectue l'action qu'un joueur se couche
+        :param
+            nom_joueur (str): nom du joueur qui rejoint la table
+        :return: True si le joueur se couche, False sinon
+        """
+        if nom_joueur != self.joueurs[self.index_joueur_tour].nom or self.phase_jeu == "avant_premiere_donne" :
+            return False
+        self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs)
+        return True
+
+    def joueur_suit(self, nom_joueur):
+        """
+        Effectue l'action qu'un joueur suit
+        :param
+            nom_joueur (str): nom du joueur qui rejoint la table
+        :return: True si le joueur se couche, False sinon
+        """
+        if nom_joueur != self.joueurs[self.index_joueur_tour].nom or self.phase_jeu == "avant_premiere_donne":
+            return False
+        self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs)
+        return True
+
+    def joueur_mise(self, nom_joueur):
+        """
+        Effectue l'action qu'un joueur mise
+        :param
+            nom_joueur (str): nom du joueur qui rejoint la table
+        :return: True si le joueur se couche, False sinon
+        """
+        if nom_joueur != self.joueurs[self.index_joueur_tour].nom or self.phase_jeu == "avant_premiere_donne":
+            return False
+        self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs)
+        return True
 
     def __str__(self):
         return (f"Table de poker créée par {self.createur}, ({len(self.joueurs)} joueurs), {self.montant_joueurs} jetons par joueurs"

@@ -141,8 +141,12 @@ def handle_join_table(data):
             table_deserialise = deserialiser_obj(table.etat_serialise)
             table_deserialise.demarrer_tour()
             emit(
-                'lancement_partie', to=str(table_id)
+                'lancement_partie', {
+                    "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+                }, to=str(table_id)
             )
+            table.etat_serialise = serialiser_obj(table_deserialise)
+            db.session.commit()
     # TODO retourner une erreur si il n'y a pas de table trouvé
 
 @socketio.on('joueur_se_couche')
@@ -150,40 +154,55 @@ def handle_se_coucher(data):
     table_id = data.get('table_id')
     nom_joueur = data.get('nom_joueur')
 
-    # TODO faire la logique d'un joueur qui se couche
+    table = db.session.get(TableModel, table_id)
+    table_deserialise = deserialiser_obj(table.etat_serialise)
 
-    emit(
-        'joueur_est_couche', {
-            'nom_joueur': nom_joueur,
-        }, to=str(table_id)
-    )
+    if table_deserialise.joueur_se_couche(nom_joueur):
+        emit(
+            'joueur_est_couche', {
+                'nom_joueur': nom_joueur,
+                "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+            }, to=str(table_id)
+        )
+        table.etat_serialise = serialiser_obj(table_deserialise)
+        db.session.commit()
 
 
 @socketio.on('joueur_suit')
-def handle_se_coucher(data):
+def handle_suivre(data):
     table_id = data.get('table_id')
     nom_joueur = data.get('nom_joueur')
 
-    # TODO faire la logique d'un joueur qui suit
+    table = db.session.get(TableModel, table_id)
+    table_deserialise = deserialiser_obj(table.etat_serialise)
 
-    emit(
-        'joueur_a_suivi', {
-            'nom_joueur': nom_joueur,
-        }, to=str(table_id)
-    )
+    if table_deserialise.joueur_suit(nom_joueur):
+        emit(
+            'joueur_a_suivi', {
+                'nom_joueur': nom_joueur,
+                "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+            }, to=str(table_id)
+        )
+        table.etat_serialise = serialiser_obj(table_deserialise)
+        db.session.commit()
 
-@socketio.on('joueur_sur_encheri')
-def handle_se_coucher(data):
+@socketio.on('joueur_mise')
+def handle_mise(data):
     table_id = data.get('table_id')
     nom_joueur = data.get('nom_joueur')
 
-    # TODO faire la logique d'un joueur qui sur_encheri
+    table = db.session.get(TableModel, table_id)
+    table_deserialise = deserialiser_obj(table.etat_serialise)
 
-    emit(
-        'joueur_a_sur_encheri', {
-            'nom_joueur': nom_joueur,
-        }, to=str(table_id)
-    )
+    if table_deserialise.joueur_mise(nom_joueur):
+        emit(
+            'joueur_a_mise', {
+                'nom_joueur': nom_joueur,
+                "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+            }, to=str(table_id)
+        )
+        table.etat_serialise = serialiser_obj(table_deserialise)
+        db.session.commit()
 
 # Initialisation du l'app et de la bd
 

@@ -9,9 +9,8 @@ class TestTable:
         assert table.createur == "Alice"
         assert table.joueurs == []
         assert table.pot == 0
-        assert table.dealer_index == 0
-        assert table.petite_blind_index == 1
-        assert table.grosse_blind_index == 2
+        assert table.petite_blind_index == (table.dealer_index + 1) % table.nb_joueurs
+        assert table.grosse_blind_index == (table.dealer_index + 2) % table.nb_joueurs
         assert table.phase_jeu == "avant_premiere_donne"
         assert table.cartes_communes == []
 
@@ -171,16 +170,42 @@ class TestTable:
         table.ajouter_joueur("Hugo")
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
+        index_dealer_debut_partie = table.dealer_index
 
         assert table.phase_jeu == "avant_premiere_donne"
-        assert table.dealer_index == 0
-        assert table.petite_blind_index == 1
-        assert table.grosse_blind_index == 2
+        assert table.petite_blind_index == (index_dealer_debut_partie + 1) % table.nb_joueurs
+        assert table.grosse_blind_index == (index_dealer_debut_partie + 2) % table.nb_joueurs
         assert table.nb_tours == 0
 
         table.terminer_tour()
         assert table.phase_jeu == "fin_de_tour"
-        assert table.dealer_index == 1
-        assert table.petite_blind_index == 2
-        assert table.grosse_blind_index == 0
+        assert table.dealer_index == (index_dealer_debut_partie + 1) % table.nb_joueurs
+        assert table.petite_blind_index == (index_dealer_debut_partie + 2) % table.nb_joueurs
+        assert table.grosse_blind_index == (index_dealer_debut_partie + 3) % table.nb_joueurs
         assert table.nb_tours == 1
+
+    def test_actions_jeu(self):
+        nb_joueurs = 3
+        montant_joueur = 500
+        table = Table("Hugo", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Hugo")
+        table.ajouter_joueur("Olivia")
+        table.ajouter_joueur("Peter")
+        index_joueur_tour = table.index_joueur_tour
+
+        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == False
+        assert table.joueur_se_couche(table.joueurs[index_joueur_tour].nom) == False
+        assert table.joueur_mise(table.joueurs[index_joueur_tour].nom) == False
+
+        table.demarrer_tour()
+
+        assert table.joueur_suit(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == False
+        assert table.joueur_se_couche(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == False
+        assert table.joueur_mise(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == False
+
+        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == True
+        assert table.joueur_se_couche(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == True
+        assert table.joueur_mise(table.joueurs[(index_joueur_tour + 2) % table.nb_joueurs].nom) == True
+        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == True
+
+        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == False

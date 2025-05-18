@@ -1,6 +1,6 @@
 const socket = io();
-const tableId = document.getElementById("table-id");
-const nomJoueur = document.getElementById("nom-joueur");
+const tableId = document.getElementById("table-id").textContent;
+const nomJoueur = document.getElementById("nom-joueur").textContent;
 const nbJoueursConnectes = document.getElementById("joueurs-connectes");
 const salleAttente = document.getElementById("salle-attente")
 const jeuLance = document.getElementById("jeu-lance")
@@ -12,12 +12,24 @@ btnFold.addEventListener("click", fold)
 btnCall.addEventListener("click", call)
 btnBet.addEventListener("click", bet)
 
+function activerTourJoueur(nomJoueurTour) {
+    if (nomJoueurTour === nomJoueur) {
+        btnFold.disabled = false
+        btnCall.disabled = false
+        btnBet.disabled = false
+    } else {
+        btnFold.disabled = true
+        btnCall.disabled = true
+        btnBet.disabled = true
+    }
+}
+
 function fold() {
     socket.emit(
         'joueur_se_couche',
         {
-            table_id: tableId.textContent,
-            nom_joueur: nomJoueur.textContent
+            table_id: tableId,
+            nom_joueur: nomJoueur
         }
     )
 }
@@ -26,18 +38,18 @@ function call() {
     socket.emit(
         'joueur_suit',
         {
-            table_id: tableId.textContent,
-            nom_joueur: nomJoueur.textContent
+            table_id: tableId,
+            nom_joueur: nomJoueur
         }
     )
 }
 
 function bet() {
     socket.emit(
-        'joueur_sur_encheri',
+        'joueur_mise',
         {
-            table_id: tableId.textContent,
-            nom_joueur: nomJoueur.textContent
+            table_id: tableId,
+            nom_joueur: nomJoueur
         }
     )
 }
@@ -45,8 +57,8 @@ function bet() {
 socket.on('connect', () => {
     console.log("Socket connectée !");
     socket.emit('join_table', {
-        table_id: tableId.textContent,
-        nom_joueur: nomJoueur.textContent
+        table_id: tableId,
+        nom_joueur: nomJoueur
     });
 });
 
@@ -59,16 +71,28 @@ socket.on('lancement_partie', (data) => {
     console.log(`La partie est lancée`);
     salleAttente.classList.add("hidden")
     jeuLance.classList.remove("hidden")
+    console.log(`C'est à ${data.joueur_tour} de jouer`)
+
+    activerTourJoueur(data.joueur_tour)
 });
 
 socket.on('joueur_est_couche', (data) => {
     console.log(`${data.nom_joueur} est couché.`);
+    console.log(`C'est à ${data.joueur_tour} de jouer`)
+
+    activerTourJoueur(data.joueur_tour)
 });
 
 socket.on('joueur_a_suivi', (data) => {
     console.log(`${data.nom_joueur} a suivi.`);
+    console.log(`C'est à ${data.joueur_tour} de jouer`)
+
+    activerTourJoueur(data.joueur_tour)
 });
 
-socket.on('joueur_a_sur_encheri', (data) => {
+socket.on('joueur_a_mise', (data) => {
     console.log(`${data.nom_joueur} sur encheri.`);
+    console.log(`C'est à ${data.joueur_tour} de jouer`)
+
+    activerTourJoueur(data.joueur_tour)
 });
