@@ -4,6 +4,8 @@ const nomJoueur = document.getElementById("nom-joueur").textContent;
 const nbJoueursConnectes = document.getElementById("joueurs-connectes");
 const salleAttente = document.getElementById("salle-attente")
 const jeuLance = document.getElementById("jeu-lance")
+const pot = document.getElementById("pot")
+const joueurs = document.getElementById("joueurs")
 const btnFold = document.getElementById("btn-fold")
 const btnCall = document.getElementById("btn-call")
 const btnBet = document.getElementById("btn-bet")
@@ -71,10 +73,26 @@ socket.on('lancement_partie', (data) => {
     console.log(`La partie est lancée`);
     salleAttente.classList.add("hidden")
     jeuLance.classList.remove("hidden")
+    pot.textContent = data.pot
+
+    for (let [nomJoueur, jetonsJoueurs] of Object.entries(data.joueurs)) {
+        joueurs.innerHTML +=
+            `<div id=${nomJoueur}>
+                <h2>${nomJoueur}</h2>
+                <p id="jetons-${nomJoueur}">Jetons : ${jetonsJoueurs}</p>
+                <p id="cartes-${nomJoueur}"></p>
+            </div>`
+    }
+
     console.log(`C'est à ${data.joueur_tour} de jouer`)
 
     activerTourJoueur(data.joueur_tour)
 });
+
+socket.on('reception_cartes', (data) => {
+    document.getElementById("cartes-"+nomJoueur).innerHTML =
+        `<span id="carte-privee1-${nomJoueur}">${data.carte1}</span>;<span id="carte-privee2-${nomJoueur}">${data.carte2}</span>`
+})
 
 socket.on('joueur_est_couche', (data) => {
     console.log(`${data.nom_joueur} est couché.`);

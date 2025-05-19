@@ -130,7 +130,8 @@ def handle_join_table(data):
 
     table = db.session.get(TableModel, table_id)
     if table:
-        join_room(str(table_id))
+        join_room(str(table_id)) # Channel public pour les informations communes
+        join_room(nom_joueur) # Channel privé pour les informations privées
         nombre_joueurs = len(table.joueurs_en_table)
         emit('joueur_rejoint', {
             'nom_joueur': nom_joueur,
@@ -140,11 +141,27 @@ def handle_join_table(data):
         if nombre_joueurs == table.nombre_joueurs_max:
             table_deserialise = deserialiser_obj(table.etat_serialise)
             table_deserialise.demarrer_tour()
+            liste_noms_jetons_joueurs = {}
+
+            for joueur in table_deserialise.joueurs:
+                liste_noms_jetons_joueurs[joueur.nom] = joueur.jetons
+
             emit(
                 'lancement_partie', {
                     "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+                    "pot": table_deserialise.pot,
+                    "joueurs": liste_noms_jetons_joueurs
                 }, to=str(table_id)
             )
+
+            for joueur in table_deserialise.joueurs:
+                emit(
+                    "reception_cartes", {
+                        "carte1": str(joueur.main[0]),
+                        "carte2": str(joueur.main[1])
+                    }, to=joueur.nom
+                )
+
             table.etat_serialise = serialiser_obj(table_deserialise)
             db.session.commit()
     # TODO retourner une erreur si il n'y a pas de table trouvé

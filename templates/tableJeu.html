@@ -2,7 +2,7 @@
 <html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>Salle d'attente - Table {{ table_id }}</title>
+        <title>Table {{ table_id }}</title>
         <link rel="stylesheet" href="/static/css/pageJeu.css">
     </head>
     <body>
@@ -14,6 +14,16 @@
 
         <div id="jeu-lance" class="hidden">
             <h1>Table {{ table_id }}</h1>
+
+            <div id="infos-générales">
+                <p id="cartes-communes"></p>
+                <p>Pot : <span id="pot"></span></p>
+            </div>
+
+            <div id="joueurs">
+
+            </div>
+
             <button id="btn-fold">Fold</button>
             <button id="btn-call">Call</button>
             <button id="btn-bet">Bet</button>
