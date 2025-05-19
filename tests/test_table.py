@@ -193,19 +193,54 @@ class TestTable:
         table.ajouter_joueur("Peter")
         index_joueur_tour = table.index_joueur_tour
 
-        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == False
-        assert table.joueur_se_couche(table.joueurs[index_joueur_tour].nom) == False
-        assert table.joueur_mise(table.joueurs[index_joueur_tour].nom) == False
+        assert table.joueur_action(table.joueurs[index_joueur_tour].nom,"se_couche") == False
 
         table.demarrer_tour()
 
-        assert table.joueur_suit(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == False
-        assert table.joueur_se_couche(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == False
-        assert table.joueur_mise(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == False
+        assert table.joueur_action(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom, "se_couche") == False
 
-        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == True
-        assert table.joueur_se_couche(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom) == True
-        assert table.joueur_mise(table.joueurs[(index_joueur_tour + 2) % table.nb_joueurs].nom) == True
-        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == True
+        assert table.joueur_action(table.joueurs[index_joueur_tour].nom, "se_couche") == True
+        assert table.joueur_action(table.joueurs[(index_joueur_tour + 1) % table.nb_joueurs].nom, "se_couche") == True
+        assert table.joueur_action(table.joueurs[(index_joueur_tour + 2) % table.nb_joueurs].nom, "se_couche") == True
 
-        assert table.joueur_suit(table.joueurs[index_joueur_tour].nom) == False
+        assert table.joueur_action(table.joueurs[index_joueur_tour].nom, "se_couche") == False
+        assert table.joueur_action(table.joueurs[table.petite_blind_index].nom, "se_couche") == True
+
+    def test_tour_mise_suivant(self):
+        nb_joueurs = 3
+        montant_joueur = 500
+        table = Table("Hugo", nb_joueurs, montant_joueur)
+        table.ajouter_joueur("Hugo")
+        table.ajouter_joueur("Olivia")
+        table.ajouter_joueur("Peter")
+        table.demarrer_tour()
+
+        assert table.phase_jeu == "premier_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "premier_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "premier_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+
+        assert table.phase_jeu == "deuxieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "deuxieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "deuxieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+
+        assert table.phase_jeu == "troisieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "troisieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "troisieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+
+        assert table.phase_jeu == "quatrieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "quatrieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+        assert table.phase_jeu == "quatrieme_tour_mise"
+        table.joueur_action(table.joueurs[table.index_joueur_tour].nom, "suit")
+
+        assert table.phase_jeu == "fin_de_tour"

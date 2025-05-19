@@ -5,6 +5,7 @@ const nbJoueursConnectes = document.getElementById("joueurs-connectes");
 const salleAttente = document.getElementById("salle-attente")
 const jeuLance = document.getElementById("jeu-lance")
 const pot = document.getElementById("pot")
+const cartesCommunes = document.getElementById("cartes-communes")
 const joueurs = document.getElementById("joueurs")
 const btnFold = document.getElementById("btn-fold")
 const btnCall = document.getElementById("btn-call")
@@ -28,30 +29,33 @@ function activerTourJoueur(nomJoueurTour) {
 
 function fold() {
     socket.emit(
-        'joueur_se_couche',
+        'joueur_parle',
         {
             table_id: tableId,
-            nom_joueur: nomJoueur
+            nom_joueur: nomJoueur,
+            action:"se_couche"
         }
     )
 }
 
 function call() {
     socket.emit(
-        'joueur_suit',
+        'joueur_parle',
         {
             table_id: tableId,
-            nom_joueur: nomJoueur
+            nom_joueur: nomJoueur,
+            action:"suit"
         }
     )
 }
 
 function bet() {
     socket.emit(
-        'joueur_mise',
+        'joueur_parle',
         {
             table_id: tableId,
-            nom_joueur: nomJoueur
+            nom_joueur: nomJoueur,
+            action:"relance"
         }
     )
 }
@@ -93,6 +97,13 @@ socket.on('reception_cartes', (data) => {
     document.getElementById("cartes-"+nomJoueur).innerHTML =
         `<span id="carte-privee1-${nomJoueur}">${data.carte1}</span>;<span id="carte-privee2-${nomJoueur}">${data.carte2}</span>`
 })
+
+socket.on("nouvelle_phase_jeu", (data) => {
+    console.log("Nouvelle phase de jeu : " + data.phase_jeu);
+
+    const cartesStr = data.cartes_communes || "";
+    cartesCommunes.innerText = cartesStr.replace(/;$/, "").split(";").join(" ");
+});
 
 socket.on('joueur_est_couche', (data) => {
     console.log(`${data.nom_joueur} est couché.`);

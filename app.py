@@ -166,60 +166,45 @@ def handle_join_table(data):
             db.session.commit()
     # TODO retourner une erreur si il n'y a pas de table trouvé
 
-@socketio.on('joueur_se_couche')
-def handle_se_coucher(data):
+@socketio.on('joueur_parle')
+def handle_joueur_parle(data):
     table_id = data.get('table_id')
     nom_joueur = data.get('nom_joueur')
+    action = data.get('action')
+    event = ""
 
     table = db.session.get(TableModel, table_id)
     table_deserialise = deserialiser_obj(table.etat_serialise)
 
-    if table_deserialise.joueur_se_couche(nom_joueur):
-        emit(
-            'joueur_est_couche', {
-                'nom_joueur': nom_joueur,
-                "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
-            }, to=str(table_id)
-        )
-        table.etat_serialise = serialiser_obj(table_deserialise)
-        db.session.commit()
+    if action == "se_couche":
+        event = "joueur_est_couche"
+    elif action == "suit":
+        event = "joueur_a_suivi"
+    elif action == "relance":
+        event = "joueur_a_mise"
 
-
-@socketio.on('joueur_suit')
-def handle_suivre(data):
-    table_id = data.get('table_id')
-    nom_joueur = data.get('nom_joueur')
-
-    table = db.session.get(TableModel, table_id)
-    table_deserialise = deserialiser_obj(table.etat_serialise)
-
-    if table_deserialise.joueur_suit(nom_joueur):
-        emit(
-            'joueur_a_suivi', {
-                'nom_joueur': nom_joueur,
-                "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
-            }, to=str(table_id)
-        )
-        table.etat_serialise = serialiser_obj(table_deserialise)
-        db.session.commit()
-
-@socketio.on('joueur_mise')
-def handle_mise(data):
-    table_id = data.get('table_id')
-    nom_joueur = data.get('nom_joueur')
-
-    table = db.session.get(TableModel, table_id)
-    table_deserialise = deserialiser_obj(table.etat_serialise)
-
-    if table_deserialise.joueur_mise(nom_joueur):
-        emit(
-            'joueur_a_mise', {
-                'nom_joueur': nom_joueur,
-                "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
-            }, to=str(table_id)
-        )
-        table.etat_serialise = serialiser_obj(table_deserialise)
-        db.session.commit()
+    if not event ==  "":
+        phase_jeu_avant_parole = table_deserialise.phase_jeu
+        if table_deserialise.joueur_action(nom_joueur, action):
+            emit(
+                event, {
+                    'nom_joueur': nom_joueur,
+                    "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+                    # TODO envoyer la mise en cours, le pot, les jetons de tous les joueurs, l'état du joueur qui à joué, a terme un seul event joueur_a_parle
+                }, to=str(table_id)
+            )
+            if not table_deserialise.phase_jeu == phase_jeu_avant_parole:
+                cartes_communes = ""
+                for carte in table_deserialise.cartes_communes:
+                    cartes_communes += str(carte) + ";"
+                emit(
+                    "nouvelle_phase_jeu",{
+                        "phase_jeu": table_deserialise.phase_jeu,
+                        "cartes_communes": cartes_communes
+                    }, to=str(table_id)
+                )
+            table.etat_serialise = serialiser_obj(table_deserialise)
+            db.session.commit()
 
 # Initialisation du l'app et de la bd
 
