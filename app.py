@@ -139,6 +139,11 @@ def _nouveau_tour(table_id):
     emit("debut_tour", {
         "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
         "pot": table_deserialise.pot,
+        "dealer": table_deserialise.joueurs[table_deserialise.dealer_index].nom,
+        "petite_blind": table_deserialise.joueurs[table_deserialise.petite_blind_index].nom,
+        "grosse_blind": table_deserialise.joueurs[table_deserialise.grosse_blind_index].nom,
+        "mise_table": table_deserialise.mise_courante,
+        "mise_joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].mise_courante,
         "joueurs": liste_noms_jetons_joueurs
         }, to=str(table_id)
     )
@@ -198,12 +203,18 @@ def handle_joueur_parle(data):
 
     if not event ==  "":
         phase_jeu_avant_parole = table_deserialise.phase_jeu
+        joueur_actif = table_deserialise.joueurs[table_deserialise.index_joueur_tour]
         if table_deserialise.joueur_action(nom_joueur, action):
+            prochain_joueur = table_deserialise.joueurs[table_deserialise.index_joueur_tour]
             emit(
                 event, {
                     'nom_joueur': nom_joueur,
-                    "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
-                    # TODO envoyer la mise en cours, le pot, les jetons de tous les joueurs, l'état du joueur qui à joué, a terme un seul event joueur_a_parle
+                    'jetons_joueur_a_joue': joueur_actif.jetons,
+                    "pot": table_deserialise.pot,
+                    "joueur_tour": prochain_joueur.nom,
+                    "mise_table": table_deserialise.mise_courante,
+                    "mise_joueur_tour": prochain_joueur.mise_courante,
+                    # TODO envoyer l'état du joueur qui à joué, a terme un seul event joueur_a_parle
                 }, to=str(table_id)
             )
             table.etat_serialise = serialiser_obj(table_deserialise)

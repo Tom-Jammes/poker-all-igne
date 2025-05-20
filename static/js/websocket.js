@@ -8,21 +8,26 @@ const pot = document.getElementById("pot");
 const cartesCommunes = document.getElementById("cartes-communes");
 const joueurs = document.getElementById("joueurs");
 const btnFold = document.getElementById("btn-fold");
-const btnCall = document.getElementById("btn-call");
+const btnCallCheck = document.getElementById("btn-call-check");
 const btnBet = document.getElementById("btn-bet");
 
 btnFold.addEventListener("click", fold);
-btnCall.addEventListener("click", call);
+btnCallCheck.addEventListener("click", call);
 btnBet.addEventListener("click", bet);
 
-function activerTourJoueur(nomJoueurTour) {
+function activerTourJoueur(nomJoueurTour, miseTable, miseJoueur) {
     if (nomJoueurTour === nomJoueur) {
+        if (miseJoueur === miseTable) {
+            btnCallCheck.innerText = "Check";
+        } else {
+            btnCallCheck.innerText = "Call";
+        }
         btnFold.disabled = false;
-        btnCall.disabled = false;
+        btnCallCheck.disabled = false;
         btnBet.disabled = false;
     } else {
         btnFold.disabled = true;
-        btnCall.disabled = true;
+        btnCallCheck.disabled = true;
         btnBet.disabled = true;
     }
 }
@@ -75,27 +80,42 @@ socket.on('joueur_rejoint', (data) => {
 
 socket.on('lancement_partie', () => {
     console.log(`La partie est lancée`);
-    salleAttente.classList.add("hidden")
+    salleAttente.classList.add("hidden");
     jeuLance.classList.remove("hidden");
 });
 
 socket.on("debut_tour", (data) => {
     console.log("Début du tour")
     pot.textContent = data.pot;
-    cartesCommunes.innerHTML = ""
-    joueurs.innerHTML = ""
+    cartesCommunes.innerHTML = "";
+    joueurs.innerHTML = "";
     for (let [nomJoueur, jetonsJoueurs] of Object.entries(data.joueurs)) {
         joueurs.innerHTML +=
             `<div id=${nomJoueur}>
-                <h2>${nomJoueur}</h2>
-                <p id="jetons-${nomJoueur}">Jetons : ${jetonsJoueurs}</p>
+                <h2>${nomJoueur} </h2>
+                <p>Jetons : <span id="jetons-${nomJoueur}">${jetonsJoueurs}</span></p>
                 <p id="cartes-${nomJoueur}"></p>
             </div>`;
     }
+    dealer = document.createElement("span");
+    dealer.id = "dealer";
+    dealer.innerText = "D";
+
+    petiteBlind = document.createElement("span");
+    petiteBlind.id = "petite-blind";
+    petiteBlind.innerText = "S";
+
+    grosseBlind = document.createElement("span");
+    grosseBlind.id = "grosse-blind";
+    grosseBlind.innerText = "B";
+
+    document.getElementById(data.dealer).children.item(0).appendChild(dealer);
+    document.getElementById(data.petite_blind).children.item(0).appendChild(petiteBlind);
+    document.getElementById(data.grosse_blind).children.item(0).appendChild(grosseBlind);
 
     console.log(`C'est à ${data.joueur_tour} de jouer`);
 
-    activerTourJoueur(data.joueur_tour);
+    activerTourJoueur(data.joueur_tour, data.mise_table, data.mise_joueur_tour);
 })
 
 socket.on('reception_cartes', (data) => {
@@ -120,27 +140,33 @@ socket.on("nouvelle_phase_jeu", (data) => {
 });
 
 socket.on("fin_tour", (data)=>{
-    console.log("Le ou les gagnants sont : " + data.nom_gagnant)
-    activerTourJoueur("") // On active le tour pour aucun joueur (on bloque les actions)
+    console.log("Le ou les gagnants sont : " + data.nom_gagnant);
+    activerTourJoueur(""); // On active le tour pour aucun joueur (on bloque les actions)
 })
 
 socket.on('joueur_est_couche', (data) => {
+    document.getElementById("jetons-"+data.nom_joueur).innerText = data.jetons_joueur_a_joue
     console.log(`${data.nom_joueur} est couché.`);
     console.log(`C'est à ${data.joueur_tour} de jouer`);
+    pot.textContent = data.pot;
 
-    activerTourJoueur(data.joueur_tour);
+    activerTourJoueur(data.joueur_tour, data.mise_table, data.mise_joueur_tour);
 });
 
 socket.on('joueur_a_suivi', (data) => {
+    document.getElementById("jetons-"+data.nom_joueur).innerText = data.jetons_joueur_a_joue
     console.log(`${data.nom_joueur} a suivi.`);
     console.log(`C'est à ${data.joueur_tour} de jouer`);
+    pot.textContent = data.pot;
 
-    activerTourJoueur(data.joueur_tour);
+    activerTourJoueur(data.joueur_tour, data.mise_table, data.mise_joueur_tour);
 });
 
 socket.on('joueur_a_mise', (data) => {
+    document.getElementById("jetons-"+data.nom_joueur).innerText = data.jetons_joueur_a_joue
     console.log(`${data.nom_joueur} sur encheri.`);
     console.log(`C'est à ${data.joueur_tour} de jouer`);
+    pot.textContent = data.pot;
 
-    activerTourJoueur(data.joueur_tour);
+    activerTourJoueur(data.joueur_tour, data.mise_table, data.mise_joueur_tour);
 });
