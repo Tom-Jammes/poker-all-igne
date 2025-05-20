@@ -2,28 +2,28 @@ const socket = io();
 const tableId = document.getElementById("table-id").textContent;
 const nomJoueur = document.getElementById("nom-joueur").textContent;
 const nbJoueursConnectes = document.getElementById("joueurs-connectes");
-const salleAttente = document.getElementById("salle-attente")
-const jeuLance = document.getElementById("jeu-lance")
-const pot = document.getElementById("pot")
-const cartesCommunes = document.getElementById("cartes-communes")
-const joueurs = document.getElementById("joueurs")
-const btnFold = document.getElementById("btn-fold")
-const btnCall = document.getElementById("btn-call")
-const btnBet = document.getElementById("btn-bet")
+const salleAttente = document.getElementById("salle-attente");
+const jeuLance = document.getElementById("jeu-lance");
+const pot = document.getElementById("pot");
+const cartesCommunes = document.getElementById("cartes-communes");
+const joueurs = document.getElementById("joueurs");
+const btnFold = document.getElementById("btn-fold");
+const btnCall = document.getElementById("btn-call");
+const btnBet = document.getElementById("btn-bet");
 
-btnFold.addEventListener("click", fold)
-btnCall.addEventListener("click", call)
-btnBet.addEventListener("click", bet)
+btnFold.addEventListener("click", fold);
+btnCall.addEventListener("click", call);
+btnBet.addEventListener("click", bet);
 
 function activerTourJoueur(nomJoueurTour) {
     if (nomJoueurTour === nomJoueur) {
-        btnFold.disabled = false
-        btnCall.disabled = false
-        btnBet.disabled = false
+        btnFold.disabled = false;
+        btnCall.disabled = false;
+        btnBet.disabled = false;
     } else {
-        btnFold.disabled = true
-        btnCall.disabled = true
-        btnBet.disabled = true
+        btnFold.disabled = true;
+        btnCall.disabled = true;
+        btnBet.disabled = true;
     }
 }
 
@@ -70,14 +70,14 @@ socket.on('connect', () => {
 
 socket.on('joueur_rejoint', (data) => {
     console.log(`${data.nom_joueur} a rejoint la table.`);
-    nbJoueursConnectes.textContent = `${data.nombre_joueurs}`
+    nbJoueursConnectes.textContent = `${data.nombre_joueurs}`;
 });
 
 socket.on('lancement_partie', (data) => {
     console.log(`La partie est lancée`);
     salleAttente.classList.add("hidden")
-    jeuLance.classList.remove("hidden")
-    pot.textContent = data.pot
+    jeuLance.classList.remove("hidden");
+    pot.textContent = data.pot;
 
     for (let [nomJoueur, jetonsJoueurs] of Object.entries(data.joueurs)) {
         joueurs.innerHTML +=
@@ -85,43 +85,52 @@ socket.on('lancement_partie', (data) => {
                 <h2>${nomJoueur}</h2>
                 <p id="jetons-${nomJoueur}">Jetons : ${jetonsJoueurs}</p>
                 <p id="cartes-${nomJoueur}"></p>
-            </div>`
+            </div>`;
     }
 
-    console.log(`C'est à ${data.joueur_tour} de jouer`)
+    console.log(`C'est à ${data.joueur_tour} de jouer`);
 
-    activerTourJoueur(data.joueur_tour)
+    activerTourJoueur(data.joueur_tour);
 });
 
 socket.on('reception_cartes', (data) => {
     document.getElementById("cartes-"+nomJoueur).innerHTML =
-        `<span id="carte-privee1-${nomJoueur}">${data.carte1}</span>;<span id="carte-privee2-${nomJoueur}">${data.carte2}</span>`
-})
+        `<img src="../static/images/cartes/${data.carte1}.png" alt="${data.carte1}" class="carte-jeu"/>
+         <img src="../static/images/cartes/${data.carte2}.png" alt="${data.carte2}" class="carte-jeu"/>`;
+});
 
 socket.on("nouvelle_phase_jeu", (data) => {
     console.log("Nouvelle phase de jeu : " + data.phase_jeu);
 
     const cartesStr = data.cartes_communes || "";
-    cartesCommunes.innerText = cartesStr.replace(/;$/, "").split(";").join(" ");
+
+    cartesCommunes.innerHTML = ""
+    cartesStr.replace(/;$/, "").split(";").forEach(carte => {
+        const img = document.createElement("img");
+        img.src = `../static/images/cartes/${carte}.png`;
+        img.alt = carte;
+        img.classList.add("carte-jeu"); // utile pour appliquer un style CSS
+        cartesCommunes.appendChild(img);
+    });
 });
 
 socket.on('joueur_est_couche', (data) => {
     console.log(`${data.nom_joueur} est couché.`);
-    console.log(`C'est à ${data.joueur_tour} de jouer`)
+    console.log(`C'est à ${data.joueur_tour} de jouer`);
 
-    activerTourJoueur(data.joueur_tour)
+    activerTourJoueur(data.joueur_tour);
 });
 
 socket.on('joueur_a_suivi', (data) => {
     console.log(`${data.nom_joueur} a suivi.`);
-    console.log(`C'est à ${data.joueur_tour} de jouer`)
+    console.log(`C'est à ${data.joueur_tour} de jouer`);
 
-    activerTourJoueur(data.joueur_tour)
+    activerTourJoueur(data.joueur_tour);
 });
 
 socket.on('joueur_a_mise', (data) => {
     console.log(`${data.nom_joueur} sur encheri.`);
-    console.log(`C'est à ${data.joueur_tour} de jouer`)
+    console.log(`C'est à ${data.joueur_tour} de jouer`);
 
-    activerTourJoueur(data.joueur_tour)
+    activerTourJoueur(data.joueur_tour);
 });

@@ -24,7 +24,7 @@ class Paquet:
 
     def _creer_paquet(self):
         """Crée un nouveau paquet de 52 cartes."""
-        couleurs = ["Coeur", "Carreau", "Trèfle", "Pique"]
+        couleurs = ["Coeur", "Carreau", "Trefle", "Pique"]
         valeurs = list(range(1, 14))  # De l'As (1) au Roi (13)
         return [Carte(valeur, couleur) for couleur in couleurs for valeur in valeurs]
 
