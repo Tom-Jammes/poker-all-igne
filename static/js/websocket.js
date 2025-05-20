@@ -73,12 +73,17 @@ socket.on('joueur_rejoint', (data) => {
     nbJoueursConnectes.textContent = `${data.nombre_joueurs}`;
 });
 
-socket.on('lancement_partie', (data) => {
+socket.on('lancement_partie', () => {
     console.log(`La partie est lancée`);
     salleAttente.classList.add("hidden")
     jeuLance.classList.remove("hidden");
-    pot.textContent = data.pot;
+});
 
+socket.on("debut_tour", (data) => {
+    console.log("Début du tour")
+    pot.textContent = data.pot;
+    cartesCommunes.innerHTML = ""
+    joueurs.innerHTML = ""
     for (let [nomJoueur, jetonsJoueurs] of Object.entries(data.joueurs)) {
         joueurs.innerHTML +=
             `<div id=${nomJoueur}>
@@ -91,7 +96,7 @@ socket.on('lancement_partie', (data) => {
     console.log(`C'est à ${data.joueur_tour} de jouer`);
 
     activerTourJoueur(data.joueur_tour);
-});
+})
 
 socket.on('reception_cartes', (data) => {
     document.getElementById("cartes-"+nomJoueur).innerHTML =
@@ -113,6 +118,11 @@ socket.on("nouvelle_phase_jeu", (data) => {
         cartesCommunes.appendChild(img);
     });
 });
+
+socket.on("fin_tour", (data)=>{
+    console.log("Le ou les gagnants sont : " + data.nom_gagnant)
+    activerTourJoueur("") // On active le tour pour aucun joueur (on bloque les actions)
+})
 
 socket.on('joueur_est_couche', (data) => {
     console.log(`${data.nom_joueur} est couché.`);

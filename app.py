@@ -1,4 +1,6 @@
 import os
+import time
+
 from flask import Flask, render_template, request, redirect, url_for
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -121,6 +123,37 @@ def page_salle_attente(table_id):
                                max_joueurs=table.nombre_joueurs_max, nom_joueur = nom_joueur)
     return "Table non trouvée"
 
+def _nouveau_tour(table_id):
+    """
+    Débute un nouveau tour et envoie les informations nécessaires aux clients
+    :param table_id: l'id de la table dont on démarre un nouveau tour
+    """
+    table = db.session.get(TableModel, table_id)
+    table_deserialise = deserialiser_obj(table.etat_serialise)
+    table_deserialise.demarrer_tour()
+    liste_noms_jetons_joueurs = {}
+
+    for joueur in table_deserialise.joueurs:
+        liste_noms_jetons_joueurs[joueur.nom] = joueur.jetons
+
+    emit("debut_tour", {
+        "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
+        "pot": table_deserialise.pot,
+        "joueurs": liste_noms_jetons_joueurs
+        }, to=str(table_id)
+    )
+
+    for joueur in table_deserialise.joueurs:
+        emit(
+            "reception_cartes", {
+                "carte1": str(joueur.main[0]),
+                "carte2": str(joueur.main[1])
+            }, to=joueur.nom
+        )
+
+    table.etat_serialise = serialiser_obj(table_deserialise)
+    db.session.commit()
+
 # Gestion du websocket
 
 @socketio.on('join_table')
@@ -139,31 +172,11 @@ def handle_join_table(data):
         }, to=str(table_id))
 
         if nombre_joueurs == table.nombre_joueurs_max:
-            table_deserialise = deserialiser_obj(table.etat_serialise)
-            table_deserialise.demarrer_tour()
-            liste_noms_jetons_joueurs = {}
-
-            for joueur in table_deserialise.joueurs:
-                liste_noms_jetons_joueurs[joueur.nom] = joueur.jetons
-
             emit(
-                'lancement_partie', {
-                    "joueur_tour": table_deserialise.joueurs[table_deserialise.index_joueur_tour].nom,
-                    "pot": table_deserialise.pot,
-                    "joueurs": liste_noms_jetons_joueurs
-                }, to=str(table_id)
+                'lancement_partie', to=str(table_id)
             )
 
-            for joueur in table_deserialise.joueurs:
-                emit(
-                    "reception_cartes", {
-                        "carte1": str(joueur.main[0]),
-                        "carte2": str(joueur.main[1])
-                    }, to=joueur.nom
-                )
-
-            table.etat_serialise = serialiser_obj(table_deserialise)
-            db.session.commit()
+            _nouveau_tour(table_id)
     # TODO retourner une erreur si il n'y a pas de table trouvé
 
 @socketio.on('joueur_parle')
@@ -193,18 +206,35 @@ def handle_joueur_parle(data):
                     # TODO envoyer la mise en cours, le pot, les jetons de tous les joueurs, l'état du joueur qui à joué, a terme un seul event joueur_a_parle
                 }, to=str(table_id)
             )
-            if not table_deserialise.phase_jeu == phase_jeu_avant_parole:
-                cartes_communes = ""
-                for carte in table_deserialise.cartes_communes:
-                    cartes_communes += str(carte) + ";"
-                emit(
-                    "nouvelle_phase_jeu",{
-                        "phase_jeu": table_deserialise.phase_jeu,
-                        "cartes_communes": cartes_communes
-                    }, to=str(table_id)
-                )
             table.etat_serialise = serialiser_obj(table_deserialise)
             db.session.commit()
+            if not table_deserialise.phase_jeu == phase_jeu_avant_parole:
+                if table_deserialise.phase_jeu == "fin_de_tour":
+                    noms_gagants = ""
+                    for gagnant in table_deserialise.gagnant:
+                        noms_gagants += gagnant.nom + ";"
+                    emit(
+                        "fin_tour", {
+                            "nom_gagnant": noms_gagants,
+                        }, to=str(table_id)
+                    )
+                    table.etat_serialise = serialiser_obj(table_deserialise)
+                    db.session.commit()
+
+                    time.sleep(5)
+                    _nouveau_tour(table_id)
+                else:
+                    cartes_communes = ""
+                    for carte in table_deserialise.cartes_communes:
+                        cartes_communes += str(carte) + ";"
+                    emit(
+                        "nouvelle_phase_jeu",{
+                            "phase_jeu": table_deserialise.phase_jeu,
+                            "cartes_communes": cartes_communes
+                        }, to=str(table_id)
+                    )
+                    table.etat_serialise = serialiser_obj(table_deserialise)
+                    db.session.commit()
 
 # Initialisation du l'app et de la bd
 

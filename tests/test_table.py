@@ -87,6 +87,9 @@ class TestTable:
         table.ajouter_joueur("Olivia")
         table.ajouter_joueur("Peter")
         assert table.demarrer_tour() is True
+        croupier_debut = table.dealer_index
+        petite_blind = table.petite_blind_index
+        grosse_blind = table.grosse_blind_index
         assert table.paquet.nombre_de_cartes() == 52 - (len(table.joueurs) * 2) # 2 cartes par joueur
         assert table.pot == 30 # Les blinds sont payées
         assert table.mise_courante == 20
@@ -99,10 +102,16 @@ class TestTable:
         table.demarrer_tour()
         assert table.grosse_blind_mise == 20
         assert table.petite_blind_mise == 10
+        assert croupier_debut == (table.dealer_index -1) % nb_joueurs
+        assert petite_blind == (table.petite_blind_index - 1) % nb_joueurs
+        assert grosse_blind == (table.grosse_blind_index - 1) % nb_joueurs
         table.terminer_tour()
         table.demarrer_tour()
         assert table.grosse_blind_mise == 20
         assert table.petite_blind_mise == 10
+        assert croupier_debut == (table.dealer_index - 2) % nb_joueurs
+        assert petite_blind == (table.petite_blind_index - 2) % nb_joueurs
+        assert grosse_blind == (table.grosse_blind_index - 2) % nb_joueurs
         table.terminer_tour()
         table.demarrer_tour()
         assert table.grosse_blind_mise == 20

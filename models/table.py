@@ -16,10 +16,11 @@ class Table:
         self.createur = nom_createur
         self.nb_joueurs = nb_joueurs # nombre de joueurs pour lancer la table TODO définir un min à 3 et un max à 10
         self.joueurs = []  # Liste des objets Joueur assis à la table
+        self.gagnant = []
         self.paquet = None
         self.pot = 0
         self.montant_joueurs = montant_joueurs
-        self.dealer_index = random.randint(0, nb_joueurs)  # Index du joueur qui est le croupier actuel
+        self.dealer_index = random.randint(0, nb_joueurs-1)  # Index du joueur qui est le croupier actuel
         self.petite_blind_index = (self.dealer_index + 1) % nb_joueurs  # Index du joueur pour la petite blind
         self.grosse_blind_index = (self.dealer_index + 2) % nb_joueurs  # Index du joueur pour la grosse blind
         self.index_joueur_tour = (self.dealer_index + 3) % nb_joueurs
@@ -82,6 +83,7 @@ class Table:
         self.paquet = Paquet()
         self.paquet.melanger()
         self.pot = 0
+        self.gagnant = []
         self.mise_courante = 0
         self.dernier_a_relancer = None
         self.phase_jeu = "premiere_donne"
@@ -210,16 +212,13 @@ class Table:
             gagnant = joueurs_en_jeu[0]
             gagnant.jetons += self.pot
             print(f"\n{gagnant.nom} remporte le pot de {self.pot} jetons.")
-            return [gagnant]
+            self.gagnant = [gagnant]
         elif len(joueurs_en_jeu) > 1:
             # TODO Logique d'évaluation des mains à implémenter ici
             gagnant = random.choice(joueurs_en_jeu) # Choix aléatoire pour l'instant
             gagnant.jetons += self.pot
             print(f"\n{gagnant.nom} (aléatoirement) remporte le pot de {self.pot} jetons.")
-            return [gagnant]
-        else:
-            print("\nPas de gagnant (tous les joueurs se sont couchés ?). Le pot est conservé pour le prochain tour.")
-            return []
+            self.gagnant = [gagnant]
 
     def terminer_tour(self):
         """Termine le tour actuel."""
