@@ -1,6 +1,8 @@
 import random
 from models.cartes import Paquet
 from models.joueur import Joueur
+from utils.evaluateur_main import EvaluateurDeMain
+
 
 class Table:
     """Représente une table de poker."""
@@ -17,6 +19,7 @@ class Table:
         self.nb_joueurs = nb_joueurs # nombre de joueurs pour lancer la table TODO définir un min à 3 et un max à 10
         self.joueurs = []  # Liste des objets Joueur assis à la table
         self.gagnant = []
+        self.combinaison_gagnante = []
         self.paquet = None
         self.pot = 0
         self.montant_joueurs = montant_joueurs
@@ -58,16 +61,16 @@ class Table:
             print(f"{joueur.nom} n'est pas à la table.")
 
     def _mettre_a_jour_indices_blinds(self):
-        """Met à jour les indices du croupier et des blinds en fonction du nombre de joueurs."""
+        """Met à jour les indices des blinds et du joueur_tour en fonction du nombre de joueurs."""
         nombre_joueurs = len(self.joueurs)
         if nombre_joueurs >= 2:
             if nombre_joueurs > 2:
                 self.petite_blind_index = (self.dealer_index + 1) % nombre_joueurs
-                self.grosse_blind_index = (self.dealer_index + 2) % nombre_joueurs
             else:
                 # En heads-up, le dealer est la petite blind, l'autre la grosse
                 self.petite_blind_index = self.dealer_index
-                self.grosse_blind_index = self.dealer_index ^ 1 # XOR avec 1 pour obtenir l'autre index
+        self.grosse_blind_index = (self.petite_blind_index + 1) % nombre_joueurs
+        self.index_joueur_tour = (self.grosse_blind_index + 1) % nombre_joueurs
 
     def demarrer_tour(self):
         """Démarre un nouveau tour de poker."""
@@ -84,6 +87,7 @@ class Table:
         self.paquet.melanger()
         self.pot = 0
         self.gagnant = []
+        self.combinaison_gagnante = []
         self.mise_courante = 0
         self.dernier_a_relancer = None
         self.phase_jeu = "premiere_donne"
@@ -204,9 +208,7 @@ class Table:
 
     def _determiner_gagnant(self):
         """Determine quel joueur gagne le tour"""
-        joueurs_en_jeu = [joueur for joueur in self.joueurs if not joueur.est_couche and not joueur.all_in]
-        if not joueurs_en_jeu:
-            joueurs_en_jeu = [joueur for joueur in self.joueurs if not joueur.est_couche] # Si tout le monde à tapis
+        joueurs_en_jeu = [joueur for joueur in self.joueurs if not joueur.est_couche]
 
         if len(joueurs_en_jeu) == 1:
             gagnant = joueurs_en_jeu[0]
@@ -214,11 +216,28 @@ class Table:
             print(f"\n{gagnant.nom} remporte le pot de {self.pot} jetons.")
             self.gagnant = [gagnant]
         elif len(joueurs_en_jeu) > 1:
-            # TODO Logique d'évaluation des mains à implémenter ici
-            gagnant = random.choice(joueurs_en_jeu) # Choix aléatoire pour l'instant
-            gagnant.jetons += self.pot
-            print(f"\n{gagnant.nom} (aléatoirement) remporte le pot de {self.pot} jetons.")
-            self.gagnant = [gagnant]
+            gagnant = []
+            evaluateur = EvaluateurDeMain()
+            meilleur_score = 0
+            combinaison_gagnante = []
+            for joueur in joueurs_en_jeu:
+                score,combinaison = evaluateur.evaluer_main_7_cartes(joueur.main + self.cartes_communes)
+                if score > meilleur_score:
+                    meilleur_score = score
+                    combinaison_gagnante = combinaison
+                    gagnant = [joueur]
+                elif score == meilleur_score:
+                    gagnant.append(joueur)
+
+            for joueur in gagnant:
+                joueur.jetons += self.pot / len(gagnant)
+
+            if len(gagnant) > 1:
+                print(f"\n{len(gagnant)} gagants remportent le pot de {self.pot/len(gagnant)} jetons chacun.")
+            else:
+                print(f"\n{gagnant[0].nom} remporte le pot de {self.pot} jetons.")
+            self.gagnant = gagnant
+            self.combinaison_gagnante = combinaison_gagnante
 
     def terminer_tour(self):
         """Termine le tour actuel."""
