@@ -198,7 +198,7 @@ def handle_joueur_parle(data):
         event = "joueur_est_couche"
     elif action == "suit":
         event = "joueur_a_suivi"
-    elif action == "relance":
+    elif action == "mise":
         event = "joueur_a_mise"
 
     if not event ==  "":

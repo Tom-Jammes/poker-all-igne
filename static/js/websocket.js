@@ -24,7 +24,7 @@ function activerTourJoueur(nomJoueurTour, miseTable, miseJoueur) {
         }
         btnFold.disabled = false;
         btnCallCheck.disabled = false;
-        btnBet.disabled = false;
+        //btnBet.disabled = false;
     } else {
         btnFold.disabled = true;
         btnCallCheck.disabled = true;
@@ -60,7 +60,7 @@ function bet() {
         {
             table_id: tableId,
             nom_joueur: nomJoueur,
-            action:"relance"
+            action:"mise"
         }
     )
 }

@@ -257,13 +257,18 @@ class Table:
         if nom_joueur != self.joueurs[self.index_joueur_tour].nom or self.phase_jeu == "avant_premiere_donne":
             return False
 
-        print(f"{nom_joueur} {action}")
-        self.joueurs[self.index_joueur_tour].a_parle = True
+        if action == "se_couche":
+            self.joueurs[self.index_joueur_tour].se_coucher()
+        elif action == "suit":
+            self.joueurs[self.index_joueur_tour].suivre(self.mise_courante)
 
         if self._est_tous_joueurs_ont_parle(): # On passe au tour suivant de mise
             self._tour_suivant_mise()
         else: # On continue le tour
-            self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs) # TODO gérer le cas où le joueur suivant est couché ou all-in
+            self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs)
+            # Si le joueur prochain est couché ou all in il n'a plus d'action jusqu'à la fin du tour
+            while self.joueurs[self.index_joueur_tour].est_couche or self.joueurs[self.index_joueur_tour].all_in:
+                self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs)
 
         return True
 
@@ -276,8 +281,12 @@ class Table:
     def _tour_suivant_mise(self):
         if self.flop() or self.turn() or self.river():
             for joueur in self.joueurs:
-                joueur.a_parle = False
-            self.index_joueur_tour = self.petite_blind_index # TODO gérer le cas où le joueur est couché ou all-in
+                if not (joueur.est_couche or joueur.all_in):
+                    joueur.a_parle = False
+            self.index_joueur_tour = (self.dealer_index + 1) % len(self.joueurs)
+            # Si le joueur est couché ou all in il n'a plus d'action jusqu'à la fin du tour
+            while self.joueurs[self.index_joueur_tour].est_couche or self.joueurs[self.index_joueur_tour].all_in:
+                self.index_joueur_tour = (self.index_joueur_tour + 1) % len(self.joueurs)
         else:
             self.terminer_tour()
 

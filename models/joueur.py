@@ -60,7 +60,7 @@ class Joueur:
         """
         montant_necessaire = montant_a_suivre - self.mise_courante
         if montant_necessaire <= 0:
-            print(f"{self.nom} a déjà misé suffisamment.")
+            print(f"{self.nom} check.")
             self.a_parle = True
             return True
         elif montant_necessaire <= self.jetons:
